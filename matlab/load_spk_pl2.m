@@ -1,4 +1,4 @@
-function load_spk_pl2(spk_pl2)
+function load_spk_pl2(spk_pl2, out_file)
 % [spkdata] = load_spk_pl2(spk_pl2)
 % load raw spikes (.pl2) and convert to .mat
 %
@@ -14,7 +14,7 @@ function load_spk_pl2(spk_pl2)
 names = cellstr(names);
 
 %% save event codes
-[~, event_ts, event_codes] = plx_event_ts(lfp_pl2, 'Strobed');
+[~, event_ts, event_codes] = plx_event_ts(spk_pl2, 'Strobed');
 save(out_file, 'event_ts', 'event_codes', '-v7.3')
 
 %% cycle through each channel looking for units
