@@ -15,13 +15,13 @@ function [bhvfiles, lfpfiles, spkfiles] = convert_raw_data(varargin)
 %   spkfiles - cell array with unit spike filenames (.mat)
 %
 %% add path to Plexon's SDK
-addpath('Matlab Offline Files SDK/')
+addpath('matlab', 'matlab/Matlab Offline Files SDK/')
 
 %% select files through gui: (1) behavior, (2) LFP, (3) spikes
 if length(varargin)==1 & ischar(varargin{1}) & exist(varargin{1})==7
     start_path = varargin{1};
 else
-    start_path = '../data';
+    start_path = 'data';
 end
 
 out_path = [start_path,'_clean'];

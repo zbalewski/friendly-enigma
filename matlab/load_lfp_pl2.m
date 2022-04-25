@@ -16,7 +16,8 @@ channel_names = names(cellfun(@(x) ~isempty(strfind(x,'FP')),names)); % only kee
 Nchannels = length(channel_names);
 
 %% get time stamps of samples
-[~, ~, lfp_ts] = plx_ad(lfp_pl2, channel_names{1});
+[~, nt,] = plx_ad(lfp_pl2, channel_names{1});
+lfp_ts = (1:nt)';
 
 %% get event codes
 [~, event_ts, event_codes] = plx_event_ts(lfp_pl2, 'Strobed');
