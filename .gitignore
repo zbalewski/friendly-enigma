@@ -1,6 +1,7 @@
 # data files
 data
 data_clean
+output
 
 # MATLAB specific
 *.asv
