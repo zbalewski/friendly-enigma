@@ -1,5 +1,5 @@
 function convert_raw_lfp(varargin)
-% convert_raw_lfp() 
+% convert_raw_lfp()
 % convert_raw_lfp(data_path)
 % save raw lfp (.pl2) to .mat; data_path is optional
 %
@@ -12,13 +12,13 @@ function convert_raw_lfp(varargin)
 %   None (.mat saved to file)
 %
 %% paths
-addpath('matlab', 'matlab/Matlab Offline Files SDK/')
+addpath('functions', 'Matlab Offline Files SDK/')
 
 % use input as starting path
 if length(varargin)==1 & ischar(varargin{1}) & exist(varargin{1})==7
     start_path = varargin{1};
 else
-    start_path = 'data';
+    start_path = '../data';
 end
 
 out_path = [start_path,'_clean'];
@@ -45,7 +45,7 @@ else
             disp(['...',file_lfp{f},'... .mat exists'])
         else
             disp(['...',file_lfp{f},'... creating .mat'])
-            load_lfp_pl2(fullfile(path_spk, file_lfp{f}), out_file);         
+            load_lfp_pl2(fullfile(path_spk, file_lfp{f}), out_file);
         end
     end
 

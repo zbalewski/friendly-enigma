@@ -1,5 +1,5 @@
 function convert_raw_bhv(varargin)
-% convert_raw_bhv() 
+% convert_raw_bhv()
 % convert_raw_bhv(data_path)
 % save raw behavior (.bhv2) to .mat; data_path is optional
 %
@@ -12,13 +12,13 @@ function convert_raw_bhv(varargin)
 %   None (.mat saved to file)
 %
 %% paths
-addpath('matlab', 'matlab/Matlab Offline Files SDK/')
+addpath('functions', 'Matlab Offline Files SDK/')
 
 % use input as starting path
 if length(varargin)==1 & ischar(varargin{1}) & exist(varargin{1})==7
     start_path = varargin{1};
 else
-    start_path = 'data';
+    start_path = '../data';
 end
 
 out_path = [start_path,'_clean'];
@@ -52,4 +52,3 @@ else
 end
 
 end
-
