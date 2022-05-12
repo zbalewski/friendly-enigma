@@ -3,13 +3,14 @@ from ephyspipe.config import TESTDATADIR
 from os.path import join as pjoin
 import numpy as np
 
+
 def test_raw_bhv():
     # load mini bhv sample
     sample_bhv = [pjoin(TESTDATADIR, "sample_bhv.mat")]
 
     # expecting 3 trial
-    sample_Trial = [np.array(i + 1) for i in range(3)] # trial num 1-3
-    sample_TrialError = [np.array(0) for i in range(3)] # error code, all 0s
+    sample_Trial = [np.array(i + 1) for i in range(3)]  # trial num 1-3
+    sample_TrialError = [np.array(0) for i in range(3)]  # error code, all 0s
 
     # load raw bhv
     output = bhv.load_raw_bhv(sample_bhv)

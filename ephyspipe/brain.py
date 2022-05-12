@@ -1,11 +1,10 @@
 import mat73
 import h5py
-
 import numpy as np
 import pandas as pd
-
 import scipy.signal as signal
 import scipy.stats as stats
+
 
 def process_raw_spk(spk_fname, channels=-1):
     """
@@ -16,7 +15,8 @@ def process_raw_spk(spk_fname, channels=-1):
     spk_fname : string
         Path file for raw spk data
     channels : list
-        Integers, restrict processing to these channel numbers; if -1, use all channels
+        Integers, restrict processing to these channel numbers; if -1, use
+        all channels
 
     Returns:
     -------
@@ -34,14 +34,13 @@ def process_raw_spk(spk_fname, channels=-1):
 
     # get unique unit names
     unit_names = [u[0] for u in data["unit_names"]]
-    if channels!=-1:
+    if channels != -1:
         unit_names = [u for u in unit_names if int(u[8:11]) in channels]
-    nunits = len(unit_names)
 
     # get last spike time in entire session, +1 second
     last_spk = [data[u][-1] for u in unit_names]
     max_t = 1 + max(last_spk)
-    ts = np.arange(np.round(1000 * max_t)) # ms, corresponding time vector
+    ts = np.arange(np.round(1000 * max_t))  # ms, corresponding time vector
     ntimes = len(ts)
 
     # get spike trains for all units
@@ -52,10 +51,10 @@ def process_raw_spk(spk_fname, channels=-1):
 
     # save some meta data for each unit
     mean_fr = [len(data[u])/max_t for u in unit_names]
-    channel = [int(u.replace("SPK_SPKC","")[:3]) for u in unit_names]
-    unit_meta = pd.DataFrame({"ID" : unit_names,
-                              "channel" : channel,
-                              "mean_fr" : mean_fr})
+    channel = [int(u.replace("SPK_SPKC", "")[:3]) for u in unit_names]
+    unit_meta = pd.DataFrame({"ID": unit_names,
+                              "channel": channel,
+                              "mean_fr": mean_fr})
 
     return raster, fr, unit_meta
 
@@ -185,12 +184,12 @@ def chop(long_brain, sync_points, window):
     nunits = long_brain.shape[0]
 
     # time window index
-    t_idx = np.arange(window[0] * 1000, window[1] * 1000) # use ms!
+    t_idx = np.arange(window[0] * 1000, window[1] * 1000)  # use ms!
     nt = t_idx.shape[0]
 
     # sync point index
-    sync_idx = np.round(sync_points * 1000) # use ms!
-    sync_idx[sync_idx == -1000] = -1 # manual fix; these trials are missing events
+    sync_idx = np.round(sync_points * 1000)  # use ms!
+    sync_idx[sync_idx == -1000] = -1  # manual fix; trials are missing events
     nsync = sync_idx.shape[0]
 
     # make index matrix
@@ -198,7 +197,7 @@ def chop(long_brain, sync_points, window):
     tile_sync = np.tile(sync_idx.reshape(-1, 1), (1, nt))
 
     long_idx = (tile_time + tile_sync).astype(int)
-    long_idx[tile_sync == -1] = -1 # same manual fix
+    long_idx[tile_sync == -1] = -1  # same manual fix
 
     # chop up each unit...
     chopped_brain = np.empty((nsync, nt, nunits))
@@ -209,7 +208,6 @@ def chop(long_brain, sync_points, window):
         chopped_brain = np.squeeze(chopped_brain)
 
     return chopped_brain
-
 
 
 def sliding_avg(data, ts, time_range, window, step=0.25):
@@ -224,7 +222,8 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
     Parameters:
     ----------
     data : 3D np array
-        sync points x time x sources, sampled at 1 kHz; sources are units or channels
+        sync points x time x sources, sampled at 1 kHz; sources are units
+        or channels
     ts : np vector
         timestamps corresponding to time axis in data, assume seconds
     time_range : tuple
@@ -245,13 +244,13 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
 
     # check that step makes sense...
     if step <= 0 or step > 1:
-        raise ValueError("Bad choice for sliding window average! " +\
+        raise ValueError("Bad choice for sliding window average! " +
                          "step' is fraction of window, must be > 0 and <= 1")
 
     # check that time range makes sense...
     if time_range[0] >= time_range[1]:
-        raise ValueError("Bad choice for sliding window average! " +\
-                        "'time_range' is not sensible")
+        raise ValueError("Bad choice for sliding window average! " +
+                         "'time_range' is not sensible")
     adjusted_time_range = np.array([
         np.max([time_range[0], ts[0]]),
         np.min([time_range[1], ts[-1]])])
@@ -264,18 +263,20 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
     offset_ms = np.round(window_ms * step)
 
     # find midpoints for averaging windows
-    start_idx = np.floor(np.argmin(np.abs(ts - adjusted_time_range[0])) + window_ms/2)
-    stop_idx = np.ceil(1 + np.argmin(np.abs(ts - adjusted_time_range[1])) - window_ms/2)
+    start_idx = np.floor(np.argmin(np.abs(ts - adjusted_time_range[0]))
+                         + window_ms/2)
+    stop_idx = np.ceil(1 + np.argmin(np.abs(ts - adjusted_time_range[1]))
+                       - window_ms/2)
     mid_idx = np.arange(start_idx, stop_idx, offset_ms).astype(int)
     mid_times = ts[mid_idx]
 
     # do sliding averages
     data_smooth = np.empty((nsync, len(mid_idx), nsources))
-    t_idx = np.arange(-np.floor(window_ms / 2), np.ceil(window_ms / 2)).astype(int)
+    t_idx = np.arange(-np.floor(window_ms / 2),
+                      np.ceil(window_ms / 2)).astype(int)
 
     for i in range(len(mid_idx)):
         data_smooth[:, i, :] = data[:, mid_idx[i] + t_idx, :].mean(axis=1)
-
 
     return mid_times, data_smooth
 
@@ -298,7 +299,8 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
     Returns:
     -------
     band_mag_chopped_np : list
-        of 3D np arrays with each bandpass magnitude; sync_points x time x channels
+        of 3D np arrays with each bandpass magnitude; sync_points x
+        time x channels
     band_phs_chopped_np : list
         of 3D np arrays with each bandpass phase; sync_points x time x channels
     ts_chopped : np vector
@@ -311,19 +313,19 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
     # get channel names
     f = h5py.File(lfp_fname, "r")
     channel_names = [key for key in f.keys() if key.find("FP") == 0]
-    if channels!=-1:
+    if channels != -1:
         channel_names = [ch for ch in channel_names if int(ch[2:]) in channels]
 
     # get lfp time
     data = mat73.loadmat(lfp_fname, only_include="lfp_ts")
-    ts_long = data["lfp_ts"]/1000 # time in seconds
+    ts_long = data["lfp_ts"]/1000  # time in seconds
 
     # make notch filters
-    notch_hz = [60, 120, 180] # Hz
+    notch_hz = [60, 120, 180]  # Hz
     notch_filts = [signal.iirnotch(n, n, 1000) for n in notch_hz]
 
     # make bandpass filters
-    band_hz = [[2, 4], [4, 8], [8, 12], [12, 30], [30, 60], [70, 200]] # Hz
+    band_hz = [[2, 4], [4, 8], [8, 12], [12, 30], [30, 60], [70, 200]]  # Hz
     band_names = ["delta", "theta", "alpha", "beta", "gamma", "high gamma"]
     band_filts = [signal.firwin(1000, [b[0], b[1]], pass_zero=False,
                                 fs=1000) for b in band_hz]
@@ -339,11 +341,11 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
         band_phs_chopped[b] = [None] * len(channel_names)
 
     # get bandpassed signal and chop into trials
-    for ch in range(len(channel_names)): # TODO: PARALLELIZE!
+    for ch in range(len(channel_names)):  # TODO: PARALLELIZE!
         print('working on band pass...' + channel_names[ch])
         # load, notch, and bandpass this channel
         mag, phs = get_bandpassed(channel_names[ch], lfp_fname,
-                                        ts_long, notch_filts, band_filts)
+                                  ts_long, notch_filts, band_filts)
         # chop by sync points
         mag_chopped = [chop(m.reshape(1, -1), sync_point, time_range)
                        for m in mag]
@@ -356,11 +358,13 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
             band_phs_chopped[band_names[b]][ch] = phs_chopped[b]
 
     # cat all channels together for 3D array: sync_points x time x channels
-    band_mag_chopped_np = [np.stack(band_mag_chopped[b], axis=2) for b in band_names]
-    band_phs_chopped_np = [np.stack(band_phs_chopped[b], axis=2) for b in band_names]
+    band_mag_chopped_np = [np.stack(band_mag_chopped[b], axis=2)
+                           for b in band_names]
+    band_phs_chopped_np = [np.stack(band_phs_chopped[b], axis=2)
+                           for b in band_names]
 
     # save meta data for these channels
-    lfp_meta = pd.DataFrame({"ID" : channel_names})
+    lfp_meta = pd.DataFrame({"ID": channel_names})
 
     return band_mag_chopped_np, band_phs_chopped_np, ts_chopped, lfp_meta
 

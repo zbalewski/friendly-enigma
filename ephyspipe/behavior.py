@@ -2,6 +2,7 @@ import mat73
 from collections import defaultdict
 import numpy as np
 
+
 def load_raw_bhv(bhv_fnames):
     """
     Load raw bhv (.bhv2 saved as .mat) into dict; consolidate
@@ -49,7 +50,7 @@ def load_pl2_codes(spk_fname):
 
     """
 
-    pl2_codes = mat73.loadmat(spk_fname, \
+    pl2_codes = mat73.loadmat(spk_fname,
                               only_include=["event_codes", "event_ts"])
 
     return pl2_codes
@@ -93,8 +94,8 @@ def get_trial_events(bhv_data, pl2_codes, event):
     for tr in range(ntr):
 
         # restrict to event codes in this trial
-        codes = pl2_codes["event_codes"][trial_start[tr] : trial_stop[tr]]
-        ts = pl2_codes["event_ts"][trial_start[tr] : trial_stop[tr]]
+        codes = pl2_codes["event_codes"][trial_start[tr]:trial_stop[tr]]
+        ts = pl2_codes["event_ts"][trial_start[tr]:trial_stop[tr]]
 
         idx = np.where(codes == event)[0]
         if idx.shape[0] == 1:

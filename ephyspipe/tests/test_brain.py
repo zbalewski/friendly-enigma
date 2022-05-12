@@ -1,5 +1,4 @@
 import ephyspipe.brain as brain
-import ephyspipe.behavior as bhv
 import numpy as np
 from ephyspipe.config import TESTDATADIR
 from os.path import join as pjoin
@@ -12,14 +11,14 @@ def test_get_fr():
     valid_idx = np.arange(edge, ntimes - edge)
 
     # make fake input raster
-    fake_raster = np.concatenate([np.zeros((1, ntimes)), \
-                                  np.ones((1, ntimes)), \
+    fake_raster = np.concatenate([np.zeros((1, ntimes)),
+                                  np.ones((1, ntimes)),
                                   np.zeros((1, ntimes))], axis=0)
     fake_raster[2, int(ntimes/2)] = 1
 
     # make fake firing rates
-    fake_fr = np.concatenate([np.zeros((1, ntimes)), \
-                              np.ones((1, ntimes)), \
+    fake_fr = np.concatenate([np.zeros((1, ntimes)),
+                              np.ones((1, ntimes)),
                               np.zeros((1, ntimes))], axis=0)
     fake_fr[2, int(ntimes / 2 - edge):int(ntimes / 2 + edge + 1)] = 0.02
 
@@ -32,8 +31,8 @@ def test_get_fr():
 
 def test_get_raster():
     # make some fake data
-    fake_data = dict({"neuron_A" : [0, 1, 2, 3, 4, 5], \
-                 "neuron_B" : [10]})
+    fake_data = dict({"neuron_A": [0, 1, 2, 3, 4, 5],
+                     "neuron_B": [10]})
     unit_names = [key for key in fake_data.keys()]
     ntimes = 20
 
@@ -60,11 +59,11 @@ def test_chop():
 
     # simulated chopped up data
     slice = np.array([range(7, 13), range(17, 23)])
-    slice_offset = np.tile(np.arange(0, ntimes, \
+    slice_offset = np.tile(np.arange(0, ntimes,
                                      ntimes / nunits).reshape((1, 1, nunits)),
                            (sync_points.shape[0], ntimes_chopped, 1))
     fake_chopped = np.repeat(slice[:, :, np.newaxis], nunits, axis=2) + \
-                   slice_offset
+        slice_offset
 
     # get chopped data
     output = brain.chop(fake_data, sync_points, window)
@@ -101,7 +100,7 @@ def test_raw_spk():
 
     # expected raster
     sample_raster = np.zeros((nunits, ntimes))
-    sample_raster[0,[20000, 25000, 30000, 35000]] = 1
+    sample_raster[0, [20000, 25000, 30000, 35000]] = 1
     sample_raster[1, [80010, 81670]] = 1
 
     # expected firing rates
