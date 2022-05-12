@@ -2,9 +2,9 @@
 final project AY250: ephys preprocessing pipeline (for Wallis lab)
 
 ## Overview
-### 0. Convert raw data
-### 1. Extract task event time stamps (to sync neural data)
-### 2. next step
+0. Convert raw data
+1. Extract task event time stamps (to sync neural data)
+2. next step
 
 
 ## Details
