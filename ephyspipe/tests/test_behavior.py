@@ -59,3 +59,20 @@ def test_events():
 
     # compare!
     assert np.all(output.round(1) == sample_trialstarts)
+
+
+def test_trialinfo():
+    # load mini bhv sample
+    sample_bhv = [pjoin(TESTDATADIR, "sample_bhv.mat")]
+    sample_bhv_data = bhv.load_raw_bhv(sample_bhv)
+
+    # expected outputs
+    sample_trialtypes = ["free", "forced", "free"]
+    sample_amnt_right = [5, 0, 1]
+
+    # pull trial info for sample
+    output = bhv.get_trialinfo(sample_bhv_data)
+
+    # compare!
+    assert np.all(output["trialtype"] == sample_trialtypes)
+    assert np.all(output["amnt_right"] == sample_amnt_right)

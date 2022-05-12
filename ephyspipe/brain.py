@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.signal as signal
 import scipy.stats as stats
+from concurrent.futures import ThreadPoolExecutor
 
 
 def process_raw_spk(spk_fname, channels=-1):
@@ -281,7 +282,8 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
     return mid_times, data_smooth
 
 
-def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0):
+def process_raw_lfp(lfp_fname, sync_point, time_range,
+                    channels=-1, broadband=0, nthreads=2):
     """
     Load raw lfp (.pl2 saved as .mat)
 
@@ -297,7 +299,9 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0)
         Integers; restrict to these channels; -1 = all
     broadband : bool
         default 0 = split into freq bands, 1 = do broadband (2-200 Hz)
-        
+    nthreads : int
+        number of threads for threadpool; default = 2
+
     Returns:
     -------
     band_mag_chopped_np : list
@@ -331,7 +335,8 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0)
         band_hz = [[2, 200]]
         band_names = ["broadband"]
     else:  # bandpass into typical frequencies
-        band_hz = [[2, 4], [4, 8], [8, 12], [12, 30], [30, 60], [70, 200]]  # Hz
+        band_hz = [[2, 4], [4, 8], [8, 12],
+                   [12, 30], [30, 60], [70, 200]]  # Hz
         band_names = ["delta", "theta", "alpha", "beta", "gamma", "high gamma"]
     band_filts = [signal.firwin(1000, [b[0], b[1]], pass_zero=False,
                                 fs=1000) for b in band_hz]
@@ -350,13 +355,15 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0)
     for ch in range(len(channel_names)):  # TODO: PARALLELIZE!
         print('working on band pass...' + channel_names[ch])
         # load, notch, and bandpass this channel
-        mag, phs = get_bandpassed(channel_names[ch], lfp_fname,
-                                  ts_long, notch_filts, band_filts)
-        # chop by sync points
-        mag_chopped = [chop(m.reshape(1, -1), sync_point, time_range)
-                       for m in mag]
-        phs_chopped = [chop(p.reshape(1, -1), sync_point, time_range)
-                       for p in phs]
+        mag_chopped, phs_chopped = get_bandpassed(
+                                   channel_names[ch],
+                                   lfp_fname,
+                                   ts_long,
+                                   sync_point,
+                                   time_range,
+                                   notch_filts,
+                                   band_filts,
+                                   nthreads)
 
         # slot in results
         for b in range(len(band_names)):
@@ -375,7 +382,8 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0)
     return band_mag_chopped_np, band_phs_chopped_np, ts_chopped, lfp_meta
 
 
-def get_bandpassed(chname, fname, ts, notch_filts, band_filts):
+def get_bandpassed(chname, fname, ts, sync_point, time_range,
+                   notch_filts, band_filts, nthreads):
     """
     Get mag and phase for bandpassed LFP channel.
 
@@ -388,17 +396,23 @@ def get_bandpassed(chname, fname, ts, notch_filts, band_filts):
         path to LFP data
     ts : np vector
         time stamps for LFP timeseries (in seconds)
+    sync_point : np vector
+        timestamps of events to align
+    time_range : tuple
+        time around sync points
     notch_filts : list
         notch filters
     band_filts : list
         bandpass filters
+    nthreads : int
+        number of threads for threadpool
 
     Returns:
     -------
-    mag : list
-        np vectors with magntiude of signal in each band_filts
-    phs : list
-        np vectors with phase of signal in each band_filt
+    mag_chopped : list
+        2D np arrays with band magntiude, sync points x time
+    phs_chopped : list
+        2D np arrays with band phase, sync points x time
 
     """
 
@@ -410,18 +424,64 @@ def get_bandpassed(chname, fname, ts, notch_filts, band_filts):
     for notch in notch_filts:
         channel = signal.filtfilt(notch[0], notch[1], channel)
 
-    # apply each band pass separately # TODO: parallelize these steps by band!
-    bandpassed = [signal.filtfilt(band, 1, channel)
-                  for band in band_filts]
+    # submit each band pass and chop as a thread
+    executor = ThreadPoolExecutor(nthreads)
+    futures = [executor.submit(do_bands_in_parallel,
+                               channel,
+                               band,
+                               time_range,
+                               sync_point) for band in band_filts]
 
-    # get analytic signal
-    analytic = [signal.hilbert(b) for b in bandpassed]
+    outcomes = [f.result() for f in futures]
 
-    # get magnitude, smooth with 50ms boxcar
-    mag_raw = [train_to_fr(np.abs(a)) for a in analytic]
-    mag = [stats.zscore(m) for m in mag_raw]
+    mag_chopped = [out[0] for out in outcomes]
+    phs_chopped = [out[1] for out in outcomes]
 
-    # get phase
-    phs = [np.angle(a) for a in analytic]
+    return mag_chopped, phs_chopped
 
-    return mag, phs
+
+def do_bands_in_parallel(lfp_channel, band_coeffs,
+                         time_range, sync_pictures_ts):
+    """
+    Process a single band pass on a single channel.
+
+    Parameters:
+    ----------
+    lfp_channel : np vector
+        broadband LFP signal (after notch filtering)
+    band_coeffs : np vector
+        coefficients for bandpass
+    time_range : tuple
+        time around sync points
+    sync_pictures_ts : np vector
+        timestamps of events to align
+
+    Returns:
+    -------
+    mag_chopped : 2D np array
+        band magntiude, sync points x time
+    phs_chapped : 2D np array
+        band phase, sync points x time
+
+    """
+
+    # bandpass LFP signal
+    bandpassed = signal.filtfilt(band_coeffs, 1, lfp_channel)
+
+    # get analytic amplitude
+    analytic = signal.hilbert(bandpassed)
+
+    # extract magnitude, zscore
+    mag_raw = train_to_fr(np.abs(analytic))
+    mag = stats.zscore(mag_raw)
+
+    # extract phase
+    phs = np.angle(analytic)
+
+    # chop by sync points
+    mag_chopped = chop(mag.reshape(1, -1),
+                       sync_pictures_ts, time_range)
+    phs_chopped = chop(phs.reshape(1, -1),
+                       sync_pictures_ts, time_range)
+
+    return mag_chopped, phs_chopped
