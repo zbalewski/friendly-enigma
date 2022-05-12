@@ -280,7 +280,7 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
     return mid_times, data_smooth
 
 
-def process_raw_lfp(lfp_fname, sync_point, time_range, channels):
+def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
     """
     Load raw lfp (.pl2 saved as .mat)
 

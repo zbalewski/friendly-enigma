@@ -75,7 +75,7 @@ def get_trial_events(bhv_data, pl2_codes, event):
         Timestamps corresponding to event within each trial (or -1)
 
     """
-    
+
     # cut up trials by default start and stop codes
     start_code = 9
     stop_code = 18

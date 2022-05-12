@@ -45,7 +45,7 @@ else
             disp(['...',file_lfp{f},'... .mat exists'])
         else
             disp(['...',file_lfp{f},'... creating .mat'])
-            load_lfp_pl2(fullfile(path_spk, file_lfp{f}), out_file);
+            load_lfp_pl2(fullfile(path_lfp, file_lfp{f}), out_file);
         end
     end
 
