@@ -27,7 +27,7 @@ matlab/convert_raw_spk.m  % select spiking files
 (See small sample files in ephyspipe/tests/sample_data for reference.)
 
 ### 1. Extract task event time stamps (to sync neural data)
-`import ephyspipe.behavior as bhv`
+```import ephyspipe.behavior as bhv```
 
 Load in the raw behavioral data:
 

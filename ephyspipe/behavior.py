@@ -1,6 +1,7 @@
 import mat73
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 
 
 def load_raw_bhv(bhv_fnames):
@@ -102,3 +103,41 @@ def get_trial_events(bhv_data, pl2_codes, event):
             timestamps[tr] = ts[idx]
 
     return timestamps
+
+
+def get_trialinfo(bhv_data):
+    """
+    Pull some trial info.
+
+    Parameters:
+    ----------
+    bhv_data : dict
+        All task data
+
+    Returns:
+    -------
+    trialinfo : pd dataframe
+        trials x features; should expand this...
+
+    """
+
+    # free vs forced trials
+    trialtype = [obj["CurrentConditionInfo"][0]["trialtype"] for obj in bhv_data["TaskObject"]]
+
+    # amnt and prob for left and right picture
+    amnt_left = [obj["CurrentConditionInfo"][0]["amnt"][0] for obj in bhv_data["TaskObject"]]
+    amnt_right = [obj["CurrentConditionInfo"][0]["amnt"][1] for obj in bhv_data["TaskObject"]]
+
+    prob_left = [obj["CurrentConditionInfo"][0]["prob"][0] for obj in bhv_data["TaskObject"]]
+    prob_right = [obj["CurrentConditionInfo"][0]["prob"][1] for obj in bhv_data["TaskObject"]]
+
+    # make data frame, and add some useful columns
+    trialinfo = pd.DataFrame({"trialtype": trialtype,
+                              "amnt_left": amnt_left,
+                              "amnt_right": amnt_right,
+                              "prob_left": prob_left,
+                              "prob_right": prob_right})
+
+    trialinfo["value_left"] = trialinfo["amnt_left"] * trialinfo["prob_left"]
+    trialinfo["value_right"] = trialinfo["amnt_right"] * trialinfo["prob_right"]
+    trialinfo["value_max"] = trialinfo[["value_left", "value_right"]].max(axis=1)

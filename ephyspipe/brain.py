@@ -281,7 +281,7 @@ def sliding_avg(data, ts, time_range, window, step=0.25):
     return mid_times, data_smooth
 
 
-def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
+def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1, broadband=0):
     """
     Load raw lfp (.pl2 saved as .mat)
 
@@ -295,7 +295,9 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
         Time range around sync points, in sec
     channels : list
         Integers; restrict to these channels; -1 = all
-
+    broadband : bool
+        default 0 = split into freq bands, 1 = do broadband (2-200 Hz)
+        
     Returns:
     -------
     band_mag_chopped_np : list
@@ -325,8 +327,12 @@ def process_raw_lfp(lfp_fname, sync_point, time_range, channels=-1):
     notch_filts = [signal.iirnotch(n, n, 1000) for n in notch_hz]
 
     # make bandpass filters
-    band_hz = [[2, 4], [4, 8], [8, 12], [12, 30], [30, 60], [70, 200]]  # Hz
-    band_names = ["delta", "theta", "alpha", "beta", "gamma", "high gamma"]
+    if broadband:  # spit out broadband signal
+        band_hz = [[2, 200]]
+        band_names = ["broadband"]
+    else:  # bandpass into typical frequencies
+        band_hz = [[2, 4], [4, 8], [8, 12], [12, 30], [30, 60], [70, 200]]  # Hz
+        band_names = ["delta", "theta", "alpha", "beta", "gamma", "high gamma"]
     band_filts = [signal.firwin(1000, [b[0], b[1]], pass_zero=False,
                                 fs=1000) for b in band_hz]
 
