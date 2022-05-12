@@ -1,12 +1,13 @@
 # friendly-enigma
-final project AY250: preprocess neural data (for Wallis lab)
-
+final project AY250: ephys preprocessing pipeline (for Wallis lab)
 
 ## Overview
+### 0. Convert raw data
+### 1. Extract task event time stamps (to sync neural data)
+### 2. next step
 
-0. `convert_raw_data.m`: load raw data (.bhv2, .pl2) and save as .mat
-1. next step
-2. next step
+
+## Details
 
 ### 0. Convert raw data
 
@@ -17,9 +18,15 @@ During a typical session, we record 3 types of data concurrently:
 
 To sync these data streams, we send duplicate task event codes from the PC controlling behavior to the PC recording neural data.
 
-These unique filetypes were designed to for MATLAB and Windows machines, and are not easily accessible with Python. To avoid spending my entire project on just opening the raw data in Python, I first convert everything to .mat files in MATLAB.
+These unique filetypes were designed to for MATLAB and Windows machines, and are not easily accessible with Python. To avoid spending my entire project on just opening the raw data in Python, I first convert everything to .mat files in MATLAB:
+```
+matlab/convert_raw_bhv.m  % select behavioral files
+matlab/convert_raw_lfp.m  % select LFP files
+matlab/convert_raw_spk.m  % select spiking files
+```
+(See small sample files in ephyspipe/tests/sample_data for reference.)
 
-### 1. Extract event time stamps from behavioral pl2_codes
+### 1. Extract task event time stamps (to sync neural data)
 `import ephyspipe.behavior as bhv`
 
 Load in the raw behavioral data:
@@ -39,3 +46,9 @@ sync_timestamps = bhv.get_trial_events(bhv_data, pl2_codes, code_stimulus)
 ```
 
 ### 2. next step
+
+
+
+## Example Notebook
+
+For more info, check out the [final project jupyter notebook](https://github.com/zbalewski/python-ay250-homework/tree/main/final_project)
