@@ -51,4 +51,4 @@ sync_timestamps = bhv.get_trial_events(bhv_data, pl2_codes, code_stimulus)
 
 ## Example Notebook
 
-For more info, check out the [final project jupyter notebook](https://github.com/zbalewski/python-ay250-homework/tree/main/final_project)
+For more info, check out the [final project jupyter notebook](https://github.com/zbalewski/python-ay250-homework/tree/main/final_project).
