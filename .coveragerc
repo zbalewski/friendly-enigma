@@ -1,0 +1,10 @@
+[run]
+branch = True
+source = .
+
+[report]
+omit =
+    ephyspipe/tests/*
+    ephyspipe/config.py
+    setup.py
+    matlab/
