@@ -2,7 +2,9 @@
 final project AY250: ephys preprocessing pipeline (for Wallis lab)
 
 ## Install
-
+```
+pip install ephyspipeZB
+```
 
 ## Overview
 0. Convert raw data
