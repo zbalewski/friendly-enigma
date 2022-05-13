@@ -4,8 +4,8 @@ final project AY250: ephys preprocessing pipeline (for Wallis lab)
 ## Overview
 0. Convert raw data
 1. Extract task event time stamps (to sync neural data)
-2. next step
-
+2. Convert spike times to trains and firing rates
+3. Bandpass LFP
 
 ## Details
 
@@ -27,10 +27,10 @@ matlab/convert_raw_spk.m  % select spiking files
 (See small sample files in ephyspipe/tests/sample_data for reference.)
 
 ### 1. Extract task event time stamps (to sync neural data)
-```import ephyspipe.behavior as bhv```
-
+```
+import ephyspipe.behavior as bhv
+```
 Load in the raw behavioral data:
-
 ```
 bhv_data = bhv.load_raw_bhv([path_to_bhvfile_A, path_to_bhvfile_B])  # input list of paths for all behavioral trials from this session
 ```
@@ -38,17 +38,39 @@ and the duplicate event codes from either the LFP or spiking data:
 ```
 pl2_codes = bhv.load_pl2_codes(path_to_spkfile)
 ```
-
 Extract timestamps for the events (e.g. stimulus onset, reward) you want to use as sync points:
 ```
 code_stimulus = 20  # these are unique to each experiment
 sync_timestamps = bhv.get_trial_events(bhv_data, pl2_codes, code_stimulus)
 ```
 
-### 2. next step
+### 2. Convert spike times to trains and firing rates
+```
+import ephyspipe.brain as brain
+```
+Load in the raw spiking data and convert to spike train, then smooth for firing rate:
+```
+spk_train, spk_fr, spk_meta = brain.process_raw_spk(path_to_spkfile)
+```
+then chop up by event codes extracted from behavior:
+```
+spk_fr_chopped = brain.chop(spk_fr, sync_points, time_range_around_sync)
+```
 
+### 3. Bandpass LFP
+Load in lfp data, notch and bandpass filter and chop each channel:
+```
+mag_chopped, phs_chopped, _, lfp_meta = \
+    brain.process_raw_lfp(path_to_lfpfile,
+    sync_points, time_range_around_sync)
+```
 
-
-## Example Notebook
-
-For more info, check out the [final project jupyter notebook](https://github.com/zbalewski/python-ay250-homework/tree/main/final_project).
+### 4. Downsample chopped neural data as needed
+```
+time_downsampled, chopped_downsampled = brain.sliding_avg(
+    spk_fr_chopped,
+    time_chopped,
+    restricted_time_range,
+    sampling_window_duration)  
+```
+                    
