@@ -70,12 +70,12 @@ mag_chopped, phs_chopped, _, lfp_meta = \
     sync_points, time_range_around_sync)
 ```
 Default frequency bands:
-- $\delta$: 2 - 4 Hz
-- $\theta$: 4 - 8 Hz
-- $\alpha$: 8 - 12 Hz
-- $\beta$: 12 - 30 Hz
-- $\gamma$: 30 - 60 Hz
-- high $\gamma$: 70 - 200 Hz
+- delta: 2 - 4 Hz
+- theta: 4 - 8 Hz
+- alpha: 8 - 12 Hz
+- beta: 12 - 30 Hz
+- gamma: 30 - 60 Hz
+- high gamma: 70 - 200 Hz
 
 ### 4. Downsample chopped neural data as needed
 ```
