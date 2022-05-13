@@ -1,6 +1,9 @@
 # friendly-enigma
 final project AY250: ephys preprocessing pipeline (for Wallis lab)
 
+## Install
+
+
 ## Overview
 0. Convert raw data
 1. Extract task event time stamps (to sync neural data)
@@ -73,4 +76,3 @@ time_downsampled, chopped_downsampled = brain.sliding_avg(
     restricted_time_range,
     sampling_window_duration)  
 ```
-                    

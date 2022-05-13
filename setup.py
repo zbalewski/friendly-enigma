@@ -35,5 +35,5 @@ setup(
         platforms=['any'],
         setup_requires=['pytest-runner'],
         tests_require=['pytest'],
-        install_requires=['numexpr', 'urllib3', 'requests']
+        install_requires=[]
 )
